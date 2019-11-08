@@ -8,42 +8,54 @@ import "github.com/skratchdot/open-golang/open"
 import "golang.org/x/sys/windows/registry"
 
 func main() {
-	fmt.Printf("Edition en ligne Silverpeas.\n")
+	fmt.Println("Edition en ligne Silverpeas.\n")
 	
 	customURL := os.Args[1]
 	
-	log.Printf(customURL)
+	log.Println(customURL)
 	
 	customURL2 := strings.Replace(customURL, "spwebdav://", "http://", 1)
 	webDavURL := strings.Replace(customURL2, "spwebdavs://", "https://", 1)
 	
 	openWithWindows(webDavURL)
+//  var input string
+//  fmt.Scanln(&input)
+
 }
 
 func openWithWindows(url string) {
-	log.Print("This is Windows !")
+	log.Printf("Windows...")
 
 	parts := strings.Split(url, "/")
 	fileName := parts[len(parts)-1]
 	extension := substr(fileName,strings.LastIndex(fileName, "."),len(fileName)-strings.LastIndex(fileName, "."))
-	log.Print("Extension = "+extension)
 
 	if isMSProject(extension) {
-		if isMSOfficeInstalled() {
-			openWithMSOffice(url)
-		}	else {
-			err2 := open.Run(url)
-			if err2 != nil {
-				log.Fatal(err2)
-			}			
-		} 
+		if isMSProjectInstalled() {
+			log.Printf("Ouvre avec MSProject...")
+			openWithMSSoftware(url)
+		}
 	}	else { 
 		if isMSOfficeInstalled() {
-			openWithMSOffice(url)
+			log.Printf("Ouvre avec MSOffice...")
+			openWithMSSoftware(url)
 		}	else { 
+			log.Printf("Ouvre avec soffice...")
 			openWithOpenOffice(url)
 		}
 	}
+}
+
+func isMSProjectInstalled() bool {
+	k, err := registry.OpenKey(registry.CLASSES_ROOT, "MSProject.Application", registry.QUERY_VALUE)
+	if err == registry.ErrNotExist {
+		fmt.Print(err)	
+		return false
+	} else {
+		return true
+	}
+	defer k.Close()
+	return false
 }
 
 func isMSOfficeInstalled() bool {
@@ -65,7 +77,7 @@ func openWithOpenOffice(url string) {
 	}
 }
 
-func openWithMSOffice(url string) {
+func openWithMSSoftware(url string) {
 	err2 := open.RunWith(url, getMSApplication(url))
 	if err2 != nil {
 		log.Fatal(err2)
@@ -78,30 +90,27 @@ func getMSApplication(url string) string {
 	extension := substr(fileName,strings.LastIndex(fileName, "."),len(fileName)-strings.LastIndex(fileName, "."))
 	
 	if isPowerPoint(extension) {
-		log.Print("Extension = "+extension+" -> powerpnt.exe")
+		log.Printf("Extension = "+extension+" -> powerpnt.exe")
 		return "powerpnt.exe"
 	} else if isExcel(extension) {
-		log.Print("Extension = "+extension+" -> excel.exe")
+		log.Printf("Extension = "+extension+" -> excel.exe")
 		return "excel.exe"
 	} else if isMSProject(extension) {
-		log.Print("Extension = "+extension+" -> winproj.exe")
+		log.Printf("Extension = "+extension+" -> winproj.exe")
 		return "winproj.exe"
 	} else {
-		log.Print("Extension = "+extension+" -> winword.exe")
+		log.Printf("Extension = "+extension+" -> winword.exe")
 		return "winword.exe"
 	}
 }
 func substr(input string, start int, length int) string {
     asRunes := []rune(input)
-
     if start >= len(asRunes) {
         return ""
     }
-
     if start+length > len(asRunes) {
         length = len(asRunes) - start
     }
-
     return string(asRunes[start : start+length])
 }
 
