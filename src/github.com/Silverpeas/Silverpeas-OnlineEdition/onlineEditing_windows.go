@@ -25,8 +25,8 @@ func openWithWindows(url string) {
 
 	parts := strings.Split(url, "/")
 	fileName := parts[len(parts)-1]
-	extension := substr(fileName,strings.LastIndex(fileName, "."),len(fileName)-strings.LastIndex(fileName, "."))
-	log.Print("Extension = "+extension)
+	extension := strings.ToLower(substr(fileName,strings.LastIndex(fileName, "."),len(fileName)-strings.LastIndex(fileName, ".")))
+//	log.Print("Extension = "+extension)
 
 	if isMSProject(extension) {
 		if isMSOfficeInstalled() {
@@ -37,11 +37,18 @@ func openWithWindows(url string) {
 				log.Fatal(err2)
 			}			
 		} 
-	}	else { 
-		if isMSOfficeInstalled() {
-			openWithMSOffice(url)
-		}	else { 
+	}	else {
+		if (isOpenOffice(extension)) {
 			openWithOpenOffice(url)
+		} else { 
+			if isMSOfficeInstalled() {
+				openWithMSOffice(url)
+			}	else { 
+				err2 := open.Run(url)
+				if err2 != nil {
+					log.Fatal(err2)
+				}			
+			}
 		}
 	}
 }
@@ -75,7 +82,7 @@ func openWithMSOffice(url string) {
 func getMSApplication(url string) string {
 	parts := strings.Split(url, "/")
 	fileName := parts[len(parts)-1]
-	extension := substr(fileName,strings.LastIndex(fileName, "."),len(fileName)-strings.LastIndex(fileName, "."))
+	extension := strings.ToLower(substr(fileName,strings.LastIndex(fileName, "."),len(fileName)-strings.LastIndex(fileName, ".")))
 	
 	if isPowerPoint(extension) {
 		log.Print("Extension = "+extension+" -> powerpnt.exe")
@@ -101,26 +108,32 @@ func substr(input string, start int, length int) string {
     if start+length > len(asRunes) {
         length = len(asRunes) - start
     }
-
     return string(asRunes[start : start+length])
 }
 
 func isPowerPoint(extension string) bool {
-	if strings.HasSuffix(extension, "ppt") || strings.HasSuffix(extension, "pot") || strings.HasSuffix(extension, "pptx") || strings.HasSuffix(extension, "pptm") || strings.HasSuffix(extension, "potx") || strings.HasSuffix(extension, "potm")	{
+	if strings.HasSuffix(extension, ".ppt") || strings.HasSuffix(extension, ".pot")	{
 		return true
 		}
 		return false
 }	
 
 func isExcel(extension string) bool {
-	if strings.HasSuffix(extension, "xls") || strings.HasSuffix(extension, "xlsx") || strings.HasSuffix(extension, "xlt") || strings.HasSuffix(extension, "xlsm") || strings.HasSuffix(extension, "xltx") || strings.HasSuffix(extension, "xltm")	 || strings.HasSuffix(extension, "xlsb")  || strings.HasSuffix(extension, "xlam") {
+	if strings.HasPrefix(extension, ".xls") || strings.HasPrefix(extension, ".xlt") || strings.HasPrefix(extension, ".xlam") {
 			return true
 			}
 		return false
 }	
 
 func isMSProject(extension string) bool {
-	if strings.HasSuffix(extension, "mpp") || strings.HasSuffix(extension, "mpt") {
+	if strings.HasPrefix(extension, ".mpp") || strings.HasPrefix(extension, ".mpt") {
+			return true
+			}
+	return false
+}	
+
+func isOpenOffice(extension string) bool {
+	if strings.HasPrefix(extension, ".od") || strings.HasPrefix(extension, ".ot") {
 			return true
 			}
 	return false
